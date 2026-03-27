@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>FaceVibe</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at top, #0f172a, #020617);
+    color: white;
+}
+
+/* CONTAINER */
+.container {
+    width: 90%;
+    max-width: 900px;
+    margin: auto;
+    margin-top: 40px;
+    padding: 25px;
+    border-radius: 25px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+/* HEADER */
+h1 {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: 30px;
+}
+
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* CARDS */
+.option {
+    background: rgba(255,255,255,0.08);
+    padding: 20px;
+    border-radius: 20px;
+    text-align: center;
+    transition: 0.3s;
+}
+
+.option:hover {
+    transform: scale(1.03);
+    background: rgba(255,255,255,0.12);
+}
+
+/* BUTTONS */
+button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 20px;
+    border: none;
+    background: linear-gradient(90deg, #8b5cf6, #6366f1);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* VIDEO */
+video {
+    width: 100%;
+    border-radius: 15px;
+    margin-top: 10px;
+}
+
+/* RESULT */
+#result {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 20px;
+}
+
+/* CREDIT */
+.credit {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #aaa;
+}
+
+/* 📱 MOBILE FIX */
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>✨ FaceVibe</h1>
+<p class="subtitle">Analyze your mood instantly</p>
+
+<div class="grid">
+
+    <!-- Upload -->
+    <div class="option">
+        <h3>📸 Upload</h3>
+        <input type="file" id="imageInput">
+        <button onclick="uploadImage()">Predict</button>
+    </div>
+
+    <!-- Camera -->
+    <div class="option">
+        <h3>🎥 Camera</h3>
+        <video id="video" autoplay></video>
+        <button onclick="startCamera()">Start Camera</button>
+        <button onclick="capture()">Capture & Predict</button>
+    </div>
+
+</div>
+
+<p id="result"></p>
+<p class="credit">By Disha Bhanarkar</p>
+
+</div>
+
+<script>
+const video = document.getElementById("video");
+
+// Start camera
+function startCamera() {
+    navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+        video.srcObject = stream;
+    })
+    .catch(() => alert("Allow camera access"));
+}
+
+// Upload image
+function uploadImage() {
+    const file = document.getElementById("imageInput").files[0];
+    sendToBackend(file);
+}
+
+// Capture from camera
+function capture() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 224;
+    canvas.height = 224;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, 224, 224);
+
+    canvas.toBlob(sendToBackend, "image/jpeg");
+}
+
+// Send to backend
+async function sendToBackend(file) {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    document.getElementById("result").innerText = "Analyzing...";
+
+    const response = await fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+
+    const emojiMap = {
+        happy: "😄",
+        sad: "😢",
+        angry: "😡",
+        surprise: "😲",
+        fear: "😨",
+        disgust: "🤢",
+        neutral: "😐"
+    };
+
+    document.getElementById("result").innerText =
+        `${emojiMap[data.emotion] || ""} ${data.emotion.toUpperCase()} (${data.confidence.toFixed(2)})`;
+}
+</script>
+
+</body>
+</html>
