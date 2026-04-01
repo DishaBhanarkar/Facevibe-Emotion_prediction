@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Load model
-model = load_model("emotion_model_fixed.h5", compile=False)
+model = load_model("emotion_model.keras", compile=False)
 
 emotion_labels = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
 
